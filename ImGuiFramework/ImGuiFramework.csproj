@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+	<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+	<EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+	<EnableAotAnalyzer>true</EnableAotAnalyzer>
+	<IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.14" />
+    <PackageReference Include="Hexa.NET.ImGui.Backends.SDL2" Version="1.0.14" />
+    <PackageReference Include="Hexa.NET.Math" Version="2.0.6" />
+    <PackageReference Include="Hexa.NET.SDL2" Version="1.2.13" />
+    <PackageReference Include="Hexa.NET.Utilities" Version="2.2.1" />
+    <PackageReference Include="Silk.NET.SDL" Version="2.22.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hexa.NET.ImGui\Hexa.NET.ImGui.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="assets\fonts\SEGMDL2.TTF">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+		<EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+		<EnableAotAnalyzer>true</EnableAotAnalyzer>
+		<IsAotCompatible>true</IsAotCompatible>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Hexa.NET.ImGui" Version="2.2.6" />
+		<PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.14" />
+		<PackageReference Include="Hexa.NET.ImGuizmo" Version="2.2.6" />
+		<PackageReference Include="Hexa.NET.ImPlot" Version="2.2.6" />
+		<PackageReference Include="Silk.NET.Direct3D.Compilers" Version="2.22.0" />
+		<PackageReference Include="Silk.NET.Direct3D11" Version="2.22.0" />
+		<PackageReference Include="Silk.NET.Direct3D11.Extensions.D3D11On12" Version="2.22.0" />
+		<PackageReference Include="Silk.NET.Direct3D12" Version="2.22.0" />
+		<PackageReference Include="Silk.NET.DXGI" Version="2.22.0" />
+		<PackageReference Include="System.Net.Security" Version="4.3.2" />
+		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\ImGuiFramework\ImGuiFramework.csproj" />
+	</ItemGroup>
+
+</Project>
