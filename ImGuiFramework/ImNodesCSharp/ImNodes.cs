@@ -536,7 +536,7 @@
             int foregroundChannelIdx = DrawListSubmissionIdxToForegroundChannelIdx(submissionIdx);
 
             // Activate the corresponding draw channel in the canvas draw list splitter.
-            ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, 2);// foregroundChannelIdx); // 2);
+            ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, foregroundChannelIdx); // 2);
         }
 
         //-------------------------------------------------------------------------
@@ -547,7 +547,7 @@
             Debug.Assert(submissionIdx != -1, "Invalid submission index");
             int backgroundChannelIdx = DrawListSubmissionIdxToBackgroundChannelIdx(submissionIdx);
             // Activate the channel in the draw list splitter.
-            ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, 1);// backgroundChannelIdx); // 1);
+            ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, backgroundChannelIdx); // 1);
         }
 
         //-------------------------------------------------------------------------
