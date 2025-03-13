@@ -491,7 +491,7 @@ namespace ImNodesCSharp
             Id = nodeId;
             Origin = Vector2.Zero;
             TitleBarContentRect = new Rectangle();
-            Rect = new Rectangle(Vector2.Zero, Vector2.Zero);
+            Rect = new Rectangle();
             ColorStyle = new NodeColorStyle();
             LayoutStyle = new LayoutStyle();
             PinIndices = new List<int>();
@@ -656,7 +656,7 @@ namespace ImNodesCSharp
         public ImNodesEditorContext EditorCtx = null;
 
         // Canvas draw list and helper state
-        public ImGuiContextPtr NodeEditorImgCtx = null;
+        //public ImGuiContextPtr NodeEditorImgCtx = null;
         public ImGuiContextPtr OriginalImgCtx = null;
         public ImDrawListPtr CanvasDrawList = null;
         public ImGuiStorage NodeIdxToSubmissionIdx = new ImGuiStorage();

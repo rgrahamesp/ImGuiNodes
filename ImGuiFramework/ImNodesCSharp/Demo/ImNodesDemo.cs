@@ -22,7 +22,7 @@
             ImNodes.EditorContextSet(editor);
             ImNodes.BeginNodeEditor();
 
-            ImNodes.BeginNode(1);
+            ImNodes.BeginNode(0);
 
             ImNodes.BeginNodeTitleBar();
             ImGui.TextUnformatted("simple node :)");

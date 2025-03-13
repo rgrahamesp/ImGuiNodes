@@ -15,6 +15,10 @@
 
         public static int GetUniqueId() => _nextUniqueId++;
         private static int _nextUniqueId = 0;
+           
+        private static int _backgroundChannelIdx = -1;  // Activate the channel in the draw list splitter.
+
+        public static float ZoomScale => EditorContextGet().ZoomScale;
 
         //-------------------------------------------------------------------------
         public static ImNodesContext CreateContext()
@@ -41,13 +45,13 @@
         //-------------------------------------------------------------------------
         private static void Initialize(ImNodesContext ctx)
         {
-            ctx.NodeEditorImgCtx = ImGui.CreateContext(ImGui.GetIO().Fonts);
-            ctx.NodeEditorImgCtx.IO.IniFilename = null;
+            //ctx.NodeEditorImgCtx = ImGui.CreateContext(ImGui.GetIO().Fonts);
+            //ctx.NodeEditorImgCtx.IO.IniFilename = null;
             ctx.OriginalImgCtx = null;
 
             ctx.CanvasOriginalOrigin = new Vector2(0.0f, 0.0f);
             ctx.CanvasOriginScreenSpace = new Vector2(0.0f, 0.0f);
-            ctx.CanvasRectScreenSpace = new Rectangle(Vector2.Zero, Vector2.Zero);
+            ctx.CanvasRectScreenSpace = new Rectangle();
             ctx.CurrentScope = ImNodesScope.None;
 
             ctx.CurrentPinIdx = int.MaxValue;
@@ -85,7 +89,7 @@
         //-------------------------------------------------------------------------
         private static unsafe void Shutdown(ImNodesContext ctx)
         {
-            ImGui.DestroyContext(ctx.NodeEditorImgCtx);
+            //ImGui.DestroyContext(ctx.NodeEditorImgCtx);
         }
 
         public static void SetImGuiContext(ImGuiContextPtr ctx) { ImGui.SetCurrentContext(ctx); }
@@ -136,7 +140,6 @@
 
             // Capture the rectangle occupied by the title bar content.
             node.TitleBarContentRect = GetItemRect();
-
             // Register the title bar area with ImGui for hit-testing.
             ImGuiP.ItemAdd(GetNodeTitleRect(node).ToImRect(), ImGui.GetID("title_bar"));
 
@@ -151,8 +154,13 @@
             Debug.Assert(ImNodesCtx.CurrentScope == ImNodesScope.None);
             ImNodesCtx.CurrentScope = ImNodesScope.Editor;
 
-            // Get the current editor context (this function would be part of your wrapper).
             ImNodesEditorContext editor = EditorContextGet();
+
+            ImNodesCtx.CanvasDrawList = ImGui.GetWindowDrawList();
+            int channels = 1 + 2 * 100/*editor.Nodes.Pool.Count*/ + 1; // Maybe should filter out !InUse nodes...
+            ImNodesCtx.CanvasDrawList.Splitter.Split(ImNodesCtx.CanvasDrawList, channels);
+
+            // Get the current editor context (this function would be part of your wrapper).
             editor.AutoPanningDelta = Vector2.Zero;
             editor.GridContentBounds = new Rectangle(float.MaxValue, float.MaxValue, -float.MaxValue, -float.MaxValue);
             editor.MiniMapEnabled = false;
@@ -181,20 +189,21 @@
             ImNodesCtx.CanvasOriginalOrigin = ImGui.GetCursorScreenPos();
             ImNodesCtx.OriginalImgCtx = ImGui.GetCurrentContext();
 
-            // Copy IO settings from the main context to the node editor context.
-            ImNodesCtx.NodeEditorImgCtx.IO = ImNodesCtx.OriginalImgCtx.IO;
-            ImNodesCtx.NodeEditorImgCtx.IO.BackendPlatformUserData = null;
-            ImNodesCtx.NodeEditorImgCtx.IO.BackendRendererUserData = null;
-            ImNodesCtx.NodeEditorImgCtx.IO.IniFilename = null;
-            ImNodesCtx.NodeEditorImgCtx.IO.ConfigInputTrickleEventQueue = 0;
-            ImNodesCtx.NodeEditorImgCtx.IO.DisplaySize = Vector2.Max(canvasSize / editor.ZoomScale, Vector2.Zero);
-            ImNodesCtx.NodeEditorImgCtx.Style = ImNodesCtx.OriginalImgCtx.Style;
+            //// Copy IO settings from the main context to the node editor context.
+            //ImNodesCtx.NodeEditorImgCtx.IO = ImNodesCtx.OriginalImgCtx.IO;
+            //ImNodesCtx.NodeEditorImgCtx.IO.BackendPlatformUserData = null;
+            //ImNodesCtx.NodeEditorImgCtx.IO.BackendRendererUserData = null;
+            //ImNodesCtx.NodeEditorImgCtx.IO.IniFilename = null;
+            //ImNodesCtx.NodeEditorImgCtx.IO.ConfigInputTrickleEventQueue = 0;
+            //ImNodesCtx.NodeEditorImgCtx.IO.DisplaySize = Vector2.Max(canvasSize / editor.ZoomScale, Vector2.Zero);
+            //ImNodesCtx.NodeEditorImgCtx.Style = ImNodesCtx.OriginalImgCtx.Style;
 
             // Set window flags so that the node editor window does not allow moving or scrolling.
             ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDecoration |
                                              ImGuiWindowFlags.NoSavedSettings |
                                              ImGuiWindowFlags.NoScrollWithMouse |
                                              ImGuiWindowFlags.NoMove |
+                                             ImGuiWindowFlags.ChildWindow |
                                              ImGuiWindowFlags.NoBackground; // FIXME from https://github.com/Nelarius/imnodes/pull/192
 
             if (ImGui.IsWindowHovered())
@@ -202,17 +211,28 @@
             else
             {
                 windowFlags |= ImGuiWindowFlags.NoInputs;
-                ImNodesCtx.NodeEditorImgCtx.IO.ConfigFlags |= ImGuiConfigFlags.NoMouse;
+                //ImNodesCtx.NodeEditorImgCtx.IO.ConfigFlags |= ImGuiConfigFlags.NoMouse;
             }
 
-            // Copy input events from the original context to the node editor context.
-            ImNodesCtx.NodeEditorImgCtx.InputEventsQueue = new ImVector<ImGuiInputEvent>();
-            for (int i = 0; i < ImNodesCtx.OriginalImgCtx.InputEventsTrail.Size; i++)
-                ImNodesCtx.NodeEditorImgCtx.InputEventsQueue.PushBack(ImNodesCtx.OriginalImgCtx.InputEventsTrail[i]);
+            //// Copy input events from the original context to the node editor context.
+            //ImNodesCtx.NodeEditorImgCtx.InputEventsQueue = new ImVector<ImGuiInputEvent>();
+            //for (int i = 0; i < ImNodesCtx.OriginalImgCtx.InputEventsTrail.Size; i++)
+            //    ImNodesCtx.NodeEditorImgCtx.InputEventsQueue.PushBack(ImNodesCtx.OriginalImgCtx.InputEventsTrail[i]);
 
-            for (int i = 0; i < ImNodesCtx.NodeEditorImgCtx.InputEventsQueue.Size; i++)
+            //for (int i = 0; i < ImNodesCtx.NodeEditorImgCtx.InputEventsQueue.Size; i++)
+            //{
+            //    var e = ImNodesCtx.NodeEditorImgCtx.InputEventsQueue[i];
+            //    if (e.Type == ImGuiInputEventType.MousePos)
+            //    {
+            //        e.Union.MousePos.PosX = (e.Union.MousePos.PosX - ImNodesCtx.CanvasOriginalOrigin.X) / editor.ZoomScale;
+            //        e.Union.MousePos.PosY = (e.Union.MousePos.PosY - ImNodesCtx.CanvasOriginalOrigin.Y) / editor.ZoomScale;
+            //    }
+            //}
+
+            // Adjust the mouse positions to the ZoomScale
+            for (int i = 0; i < ImNodesCtx.OriginalImgCtx.InputEventsTrail.Size; i++)
             {
-                var e = ImNodesCtx.NodeEditorImgCtx.InputEventsQueue[i];
+                var e = ImNodesCtx.OriginalImgCtx.InputEventsTrail[i];
                 if (e.Type == ImGuiInputEventType.MousePos)
                 {
                     e.Union.MousePos.PosX = (e.Union.MousePos.PosX - ImNodesCtx.CanvasOriginalOrigin.X) / editor.ZoomScale;
@@ -220,27 +240,25 @@
                 }
             }
 
-            ImGui.SetCurrentContext(ImNodesCtx.NodeEditorImgCtx);
-            ImGui.NewFrame();
+            //ImGui.SetCurrentContext(ImNodesCtx.NodeEditorImgCtx);
+            ////ImGui.NewFrame();
 
-            ImGui.SetNextWindowPos(new Vector2(0, 0));
-            ImGui.SetNextWindowSize(ImGui.GetIO().DisplaySize);
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
-            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(1, 1));
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, ImNodesCtx.Style.Colors[(int)ImNodesCol.GridBackground]);
-            ImGui.Begin("editor_canvas", null, windowFlags);
-            ImGui.PopStyleVar(2);
-            ImGui.PopStyleColor();
+            //ImGui.SetNextWindowPos(new Vector2(0, 0));
+            //ImGui.SetNextWindowSize(ImGui.GetIO().DisplaySize);
+            //ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
+            //ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(1, 1));
+            //ImGui.PushStyleColor(ImGuiCol.WindowBg, ImNodesCtx.Style.Colors[(int)ImNodesCol.GridBackground]);
+            //ImGui.Begin("editor_canvas", null, windowFlags);
+            ////ImGui.BeginChild("editor_canvas", ImGuiChildFlags.Borders, windowFlags);
+            //ImGui.PopStyleVar(2);
+            //ImGui.PopStyleColor();
 
             ImNodesCtx.CanvasOriginScreenSpace = ImGui.GetCursorScreenPos();
 
-            // Set the draw list for the node editor.
-            DrawListSet(ImGui.GetWindowDrawList());
-
             Vector2 windowSize = ImGui.GetWindowSize();
-            ImNodesCtx.CanvasRectScreenSpace = new Rectangle(
-                EditorSpaceToScreenSpace(new Vector2(0, 0)),
-                EditorSpaceToScreenSpace(windowSize));
+            Vector2 min = EditorSpaceToScreenSpace(new Vector2(0, 0));
+            Vector2 max = EditorSpaceToScreenSpace(windowSize);
+            ImNodesCtx.CanvasRectScreenSpace = new Rectangle(min.X, min.Y, max.X, max.Y);
 
             // Optionally draw grid lines if enabled.
             if ((ImNodesCtx.Style.Flags & ImNodesStyleFlags.GridLines) != 0)
@@ -303,11 +321,16 @@
             }
 
             // Render each node.
+            _backgroundChannelIdx = -1;
             for (int nodeIdx = 0; nodeIdx < editor.Nodes.Pool.Count; nodeIdx++)
             {
                 if (editor.Nodes.InUse[nodeIdx])
                 {
-                    DrawListActivateNodeBackground(nodeIdx);
+                    int submissionIdx = ImNodesCtx.NodeIdxToSubmissionIdx.GetInt((uint)nodeIdx, -1);
+                    Debug.Assert(submissionIdx != -1, "Invalid submission index");
+                    _backgroundChannelIdx = 1 + 2 * submissionIdx;
+                    ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, _backgroundChannelIdx);
+                    //DrawListActivateNodeBackground(nodeIdx);
                     DrawNode(editor, nodeIdx);
                 }
             }
@@ -323,6 +346,8 @@
                     DrawLink(editor, linkIdx);
                 }
             }
+
+            //ImNodesCtx.CanvasDrawList.Splitter.Merge(ImNodesCtx.CanvasDrawList);
 
             // Render UI elements for click interaction (e.g. partial links, box selection).
             DrawListAppendClickInteractionChannel();
@@ -385,32 +410,38 @@
             editor.Links.Update();
 
             // Merge the draw channels.
-            ImNodesCtx.CanvasDrawList.ChannelsMerge();
+            //ImNodesCtx.CanvasDrawList.ChannelsMerge();
+            ImNodesCtx.CanvasDrawList.Splitter.Merge(ImNodesCtx.CanvasDrawList);
 
-            // Update the text input flag on the original ImGui context.
-            ImNodesCtx.OriginalImgCtx.WantTextInputNextFrame =
-                System.Math.Max(ImNodesCtx.OriginalImgCtx.WantTextInputNextFrame, ImNodesCtx.NodeEditorImgCtx.WantTextInputNextFrame);
+            //// Update the text input flag on the original ImGui context.
+            //ImNodesCtx.OriginalImgCtx.WantTextInputNextFrame =
+            //    System.Math.Max(ImNodesCtx.OriginalImgCtx.WantTextInputNextFrame, ImNodesCtx.NodeEditorImgCtx.WantTextInputNextFrame);
 
-            if (MouseInCanvas())
-            {
-                ImNodesCtx.OriginalImgCtx.MouseCursor = ImNodesCtx.NodeEditorImgCtx.MouseCursor;
-            }
+            //if (MouseInCanvas())
+            //{
+            //    ImNodesCtx.OriginalImgCtx.MouseCursor = ImNodesCtx.NodeEditorImgCtx.MouseCursor;
+            //}
 
             // End the node editor frame.
-            ImGui.End();
-            ImGui.Render();
+            //ImGui.End();
+            //ImGui.Render();
 
-            var drawData = ImGui.GetDrawData();
+            //// Restore the original ImGui context.
+            //ImGui.SetCurrentContext(ImNodesCtx.OriginalImgCtx);
+            //ImNodesCtx.OriginalImgCtx = null;
 
-            // Restore the original ImGui context.
-            ImGui.SetCurrentContext(ImNodesCtx.OriginalImgCtx);
-            ImNodesCtx.OriginalImgCtx = null;
-
-            ImGui.EndChild();
+            //ImGui.EndChild();
             ImGui.EndGroup();
+        }
 
+        //-------------------------------------------------------------------------
+        public static void PostRender()
+        {
+            var editor = EditorContextGet();
+            var drawData = ImGui.GetDrawData();
+         
             // Copy the draw data from the node editor context to the original context.
-            if (!drawData.IsNull)
+            if (!drawData.IsNull && editor.ZoomScale != 1.0f)
             {
                 for (int i = 0; i < drawData.CmdListsCount; i++)
                 {
@@ -493,7 +524,11 @@
 
             // Register the node in the draw list (which may add draw channels, etc.)
             DrawListAddNode(nodeIdx);
-            DrawListActivateCurrentNodeForeground();
+
+            // Activate the corresponding draw channel in the canvas draw list splitter.
+            int foregroundChannelIdx = _backgroundChannelIdx + 1;
+            ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, foregroundChannelIdx);
+            //DrawListActivateCurrentNodeForeground();
 
             // Push a unique ID for this node and begin an ImGui group to contain the node's content.
             ImGui.PushID(node.Id);
@@ -503,15 +538,18 @@
         //-------------------------------------------------------------------------
         public static void DrawListAddNode(int nodeIdx)
         {
-            // Map the node index to the current submission order index.
-            // (Assume SetInt takes an integer key and a value, e.g. for a dictionary-like structure.)
-            ImNodesCtx.NodeIdxToSubmissionIdx.SetInt((uint)nodeIdx, ImNodesCtx.NodeIdxSubmissionOrder.Count);
+            if (!ImNodesCtx.NodeIdxSubmissionOrder.Contains(nodeIdx))
+            {
+                // Map the node index to the current submission order index.
+                // (Assume SetInt takes an integer key and a value, e.g. for a dictionary-like structure.)
+                ImNodesCtx.NodeIdxToSubmissionIdx.SetInt((uint)nodeIdx, ImNodesCtx.NodeIdxSubmissionOrder.Count);
 
-            // Add the node index to the submission order list.
-            ImNodesCtx.NodeIdxSubmissionOrder.Add(nodeIdx);
+                // Add the node index to the submission order list.
+                ImNodesCtx.NodeIdxSubmissionOrder.Add(nodeIdx);
 
-            // Grow the draw list channels by 2 so that this node gets its background and foreground channels.
-            ImDrawListGrowChannels(ImNodesCtx.CanvasDrawList, 2);
+                // Grow the draw list channels by 2 so that this node gets its background and foreground channels.
+                ImDrawListGrowChannels(ImNodesCtx.CanvasDrawList, 2);
+            }
         }
 
         //-------------------------------------------------------------------------
@@ -526,29 +564,29 @@
             return DrawListSubmissionIdxToBackgroundChannelIdx(submission_idx) + 1;
         }
 
-        //-------------------------------------------------------------------------
-        public static void DrawListActivateCurrentNodeForeground()
-        {
-            // Get the submission index for the current node (which is the last element in the submission order).
-            int submissionIdx = ImNodesCtx.NodeIdxSubmissionOrder.Count - 1;
+        ////-------------------------------------------------------------------------
+        //public static void DrawListActivateCurrentNodeForeground()
+        //{
+        //    // Get the submission index for the current node (which is the last element in the submission order).
+        //    int submissionIdx = ImNodesCtx.NodeIdxSubmissionOrder.Count - 1;
 
-            // Convert the submission index to a foreground channel index.
-            int foregroundChannelIdx = DrawListSubmissionIdxToForegroundChannelIdx(submissionIdx);
+        //    // Convert the submission index to a foreground channel index.
+        //    int foregroundChannelIdx = DrawListSubmissionIdxToForegroundChannelIdx(submissionIdx);
 
-            // Activate the corresponding draw channel in the canvas draw list splitter.
-            ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, foregroundChannelIdx); // 2);
-        }
+        //    // Activate the corresponding draw channel in the canvas draw list splitter.
+        //    ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, foregroundChannelIdx); // 2);
+        //}
 
-        //-------------------------------------------------------------------------
-        public static void DrawListActivateNodeBackground(int nodeIdx)
-        {
-            // Assume GetInt returns the submission index (or -1 if not found).
-            int submissionIdx = ImNodesCtx.NodeIdxToSubmissionIdx.GetInt((uint)nodeIdx, -1);
-            Debug.Assert(submissionIdx != -1, "Invalid submission index");
-            int backgroundChannelIdx = DrawListSubmissionIdxToBackgroundChannelIdx(submissionIdx);
-            // Activate the channel in the draw list splitter.
-            ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, backgroundChannelIdx); // 1);
-        }
+        ////-------------------------------------------------------------------------
+        //public static void DrawListActivateNodeBackground(int nodeIdx)
+        //{
+        //    // Assume GetInt returns the submission index (or -1 if not found).
+        //    int submissionIdx = ImNodesCtx.NodeIdxToSubmissionIdx.GetInt((uint)nodeIdx, -1);
+        //    Debug.Assert(submissionIdx != -1, "Invalid submission index");
+        //    int backgroundChannelIdx = 1 + 2 * submissionIdx; //DrawListSubmissionIdxToBackgroundChannelIdx(submissionIdx);
+        //    // Activate the channel in the draw list splitter.
+        //    ImNodesCtx.CanvasDrawList.Splitter.SetCurrentChannel(ImNodesCtx.CanvasDrawList, backgroundChannelIdx); // 1);
+        //}
 
         //-------------------------------------------------------------------------
         public static void EndNode()
@@ -665,14 +703,22 @@
         }
 
         // [SECTION] render helpers
-        public static Rectangle GetItemRect() => new Rectangle(ImGui.GetItemRectMin(), ImGui.GetItemRectMax());
+        //-------------------------------------------------------------------------
+        public static Rectangle GetItemRect()
+        {
+            Vector2 min = ImGui.GetItemRectMin();
+            Vector2 max = ImGui.GetItemRectMax();
+            return new Rectangle(min.X, min.Y, max.X, max.Y);
+        }
+
+        //-------------------------------------------------------------------------
         public static Vector2 GetNodeTitleBarOrigin(ImNodeData node) => node.Origin + node.LayoutStyle.Padding;
 
         //-------------------------------------------------------------------------
         public static Vector2 GetNodeContentOrigin(ImNodeData node)
         {
-            Vector2 title_bar_height = new Vector2(0f, node.TitleBarContentRect.GetHeight() + 2.0f * node.LayoutStyle.Padding.Y);
-            return node.Origin + title_bar_height + node.LayoutStyle.Padding;
+            Vector2 titleBarHeight = new Vector2(0f, node.TitleBarContentRect.GetHeight() + 2.0f * node.LayoutStyle.Padding.Y);
+            return node.Origin + titleBarHeight + node.LayoutStyle.Padding;
         }
 
         //-------------------------------------------------------------------------
@@ -680,10 +726,7 @@
         {
             Rectangle expandedTitleRect = node.TitleBarContentRect;
             expandedTitleRect.Expand(node.LayoutStyle.Padding);
-
-            return new Rectangle(
-                expandedTitleRect.Min,
-                expandedTitleRect.Min + new Vector2(node.Rect.GetWidth(), 0f) + new Vector2(0f, expandedTitleRect.GetHeight()));
+            return expandedTitleRect;
         }
 
         //-------------------------------------------------------------------------
@@ -1478,8 +1521,13 @@
             Vector2 miniMapPos = ExtraMath.ImFloor(Vector2.Lerp(topLeftPos, bottomRightPos, align));
 
             // Set mini-map rectangles and scaling.
-            editor.MiniMapRectScreenSpace = new Rectangle(miniMapPos - border, miniMapPos + miniMapSize + border);
-            editor.MiniMapContentScreenSpace = new Rectangle(miniMapPos, miniMapPos + miniMapSize);
+            Vector2 min = miniMapPos - border;
+            Vector2 max = miniMapPos + miniMapSize + border;
+            editor.MiniMapRectScreenSpace = new Rectangle(min.X, min.Y, max.X, max.Y);
+
+            Vector2 contentMin = miniMapPos;
+            Vector2 contentMax = miniMapPos + miniMapSize;
+            editor.MiniMapContentScreenSpace = new Rectangle(contentMin.X, contentMin.Y, contentMax.X, contentMax.Y);
             editor.MiniMapScaling = miniMapScaling;
         }
 
@@ -1906,7 +1954,7 @@
             // First, create a bounding rectangle for the link.
             Vector2 min = new Vector2(MathF.Min(linkStart.X, linkEnd.X), MathF.Min(linkStart.Y, linkEnd.Y));
             Vector2 max = new Vector2(MathF.Max(linkStart.X, linkEnd.X), MathF.Max(linkStart.Y, linkEnd.Y));
-            Rectangle linkRect = new Rectangle(min, max);
+            Rectangle linkRect = new Rectangle(min.X, min.Y, max.X, max.Y);
             // Check if the two rectangles overlap.
             return rect.Overlaps(linkRect);
         }
@@ -2138,7 +2186,9 @@
         //-------------------------------------------------------------------------
         public static Rectangle ScreenSpaceToGridSpace(ImNodesEditorContext editor, Rectangle r)
         {
-            return new Rectangle(ScreenSpaceToGridSpace(editor, r.Min), ScreenSpaceToGridSpace(editor, r.Max));
+            Vector2 min = ScreenSpaceToGridSpace(editor, r.Min);
+            Vector2 max = ScreenSpaceToGridSpace(editor, r.Max);
+            return new Rectangle(min.X, min.Y, max.X, max.Y);
         }
 
         //-------------------------------------------------------------------------
@@ -2182,7 +2232,9 @@
         //-------------------------------------------------------------------------
         public static Rectangle ScreenSpaceToMiniMapSpace(ImNodesEditorContext editor, Rectangle r)
         {
-            return new Rectangle(ScreenSpaceToMiniMapSpace(editor, r.Min), ScreenSpaceToMiniMapSpace(editor, r.Max));
+            Vector2 min = ScreenSpaceToMiniMapSpace(editor, r.Min);
+            Vector2 max = ScreenSpaceToMiniMapSpace(editor, r.Max);
+            return new Rectangle(min.X, min.Y, max.X, max.Y);
         }
 
         //-------------------------------------------------------------------------

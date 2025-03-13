@@ -163,6 +163,19 @@
             // Renders ImGui Data
             var io = ImGui.GetIO();
             ImGui.Render();
+
+            // If using a zoom/pan feature in node editor, apply the zoom scale to ImDrawData
+            if (ImNodes.ZoomScale != 1.0f)
+            {
+                // Does not scale nodes / links / pins/ grid
+                //var drawData = ImGui.GetDrawData();
+                //drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale); // ensure proper scaling
+                //drawData.FramebufferScale = new Vector2(ImNodes.ZoomScale, ImNodes.ZoomScale);
+
+                // So attempting to scale vertices like the original
+                ImNodes.PostRender();
+            }
+
             ImGui.EndFrame();
             OnRenderDrawData.Invoke();
 
@@ -182,7 +195,7 @@
             {
                 ImNodes.SetImGuiContext(null);
 
-                ImNodes.DestroyContext(nodesContext);
+                //ImNodes.DestroyContext(nodesContext);
 
                 ImGui.SetCurrentContext(null);
                 ImGui.DestroyContext(guiContext);

@@ -28,16 +28,17 @@ namespace ImNodesCSharp.Math
                 Bottom = value.Y;
             }
         }
-        public Vector2 Offset
-        {  
-            get => new Vector2(Left, Top);
-            set
-            {
-                Left = value.X;
-                Top = value.Y;
-            }
+        
+        public Vector2 Size => Max - Min;
+
+        //------------------------------------------------------------------------------
+        public Rectangle()
+        {
+            Left = 0f;
+            Top = 0f;
+            Right = 0f;
+            Bottom = 0f;
         }
-        public Vector2 Size => new Vector2(Right, Bottom) - Offset;
 
         //------------------------------------------------------------------------------
         public Rectangle(float left, float top, float right, float bottom)
@@ -48,14 +49,14 @@ namespace ImNodesCSharp.Math
             Bottom = bottom;
         }
 
-        //------------------------------------------------------------------------------
-        public Rectangle(Vector2 pos, Vector2 size)
-        {
-            Left = pos.X;
-            Top = pos.Y;
-            Right = pos.X + size.X;
-            Bottom = pos.Y + size.Y;
-        }
+        ////------------------------------------------------------------------------------
+        //public Rectangle(Vector2 pos, Vector2 size)
+        //{
+        //    Left = pos.X;
+        //    Top = pos.Y;
+        //    Right = pos.X + size.X;
+        //    Bottom = pos.Y + size.Y;
+        //}
 
         //------------------------------------------------------------------------------
         public ImRect ToImRect() => new ImRect(Min, Max);
@@ -177,6 +178,7 @@ namespace ImNodesCSharp.Math
             return new Rectangle(left.Left + right.X, left.Top + right.Y, left.Right + right.X, left.Bottom + right.Y);
         }
 
+        //------------------------------------------------------------------------------
         public static Rectangle operator -(Rectangle left, Vector2 right)
         {
             return new Rectangle(left.Left - right.X, left.Top - right.Y, left.Right - right.X, left.Bottom - right.Y);
@@ -218,6 +220,7 @@ namespace ImNodesCSharp.Math
             return new Rectangle(left.Left - right, left.Top - right, left.Right - right, left.Bottom - right);
         }
 
+        //------------------------------------------------------------------------------
         public static Rectangle operator *(Rectangle left, int right)
         {
             return new Rectangle(left.Left * right, left.Top * right, left.Right * right, left.Bottom * right);
@@ -236,10 +239,10 @@ namespace ImNodesCSharp.Math
         }
 
         // Rectangle interface
-        public Vector2 GetCenter() => new Vector2((Min.X + Max.X) * 0.5f, (Min.Y + Max.Y) * 0.5f);
-        public Vector2 GetSize() => new Vector2(Max.X - Min.X, Max.Y - Min.Y);
-        public float GetWidth() => Max.X - Min.X;
-        public float GetHeight() => Max.Y - Min.Y;
+        public Vector2 GetCenter() => new Vector2((Left + Right) * 0.5f, (Top + Bottom) * 0.5f);
+        public Vector2 GetSize() => Max - Min;
+        public float GetWidth() => Right - Left;
+        public float GetHeight() => Bottom - Top;
         public float GetArea() => (Max.X - Min.X) * (Max.Y - Min.Y);
         public Vector2 GetTL() => Min;                   // Top-left
         public Vector2 GetTR() => new Vector2(Max.X, Min.Y);  // Top-right

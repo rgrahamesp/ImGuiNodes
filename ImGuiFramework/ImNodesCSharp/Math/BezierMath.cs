@@ -252,6 +252,7 @@ namespace ImNodesCSharp.Math
             return new CubicBezierSplitResult { Left = left, Right = right };
         }
 
+        //------------------------------------------------------------------------
         public static CubicBezierSplitResult CubicBezierSplit(CubicBezierPoints curve, float t)
         {
             return CubicBezierSplit(curve.P0, curve.P1, curve.P2, curve.P3, t);
@@ -266,6 +267,7 @@ namespace ImNodesCSharp.Math
             return a * a * a * p0 + 3 * t * a * a * p1 + 3 * t * t * a * p2 + t * t * t * p3;
         }
 
+        //------------------------------------------------------------------------
         public static Rectangle CubicBezierBoundingRect(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
         {
             Vector2 a = 3 * p3 - 9 * p2 + 9 * p1 - 3 * p0;
@@ -320,7 +322,7 @@ namespace ImNodesCSharp.Math
                     }
                 }
             }
-            return new Rectangle(tl, rb);
+            return new Rectangle(tl.X, tl.Y, rb.X, rb.Y);
         }
 
         public static Rectangle CubicBezierBoundingRect(CubicBezierPoints curve)
@@ -811,7 +813,7 @@ namespace ImNodesCSharp.Math
             Vector2 min = new Vector2(System.Math.Min(cb.P0.X, cb.P3.X), System.Math.Min(cb.P0.Y, cb.P3.Y));
             Vector2 max = new Vector2(System.Math.Max(cb.P0.X, cb.P3.X), System.Math.Max(cb.P0.Y, cb.P3.Y));
 
-            Rectangle rect = new Rectangle(min, max);
+            Rectangle rect = new Rectangle(min.X, min.Y, max.X, max.Y);
             rect.Add(cb.P1);
             rect.Add(cb.P2);
             rect.Expand(new Vector2(hoverDistance, hoverDistance));
