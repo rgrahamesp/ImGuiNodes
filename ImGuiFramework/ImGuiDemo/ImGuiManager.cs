@@ -9,10 +9,13 @@
     public class ImGuiManager : IDisposable
     {
         private ImGuiContextPtr guiContext;
-        private ImNodesContext nodesContext;
+        private ImNodes _imNodes;
+        private ImNodesContext _imNodesContext;  
 
-        public unsafe ImGuiManager()
+        public unsafe ImGuiManager(ImNodes imnodes=null)
         {
+            _imNodes = imnodes;
+
             // Create ImGui context
             guiContext = ImGui.CreateContext(null);
 
@@ -22,10 +25,8 @@
             ImGuiImplSDL2.SetCurrentContext(guiContext);
 
             // Create and set ImNodes context and set style
-            ImNodes.SetImGuiContext(guiContext);
-
-            nodesContext = ImNodes.CreateContext();
-            ImNodes.SetCurrentContext(nodesContext);
+            _imNodes.SetImGuiContext(guiContext);
+            _imNodesContext = _imNodes.CreateContext();
 
             // Setup ImGui config.
             var io = ImGui.GetIO();
@@ -140,9 +141,7 @@
             ImGui.SetCurrentContext(guiContext);
            
             // Set ImGui context for ImNodes
-            ImNodes.SetImGuiContext(guiContext);
-
-            ImNodes.SetCurrentContext(nodesContext);
+            _imNodes.SetImGuiContext(guiContext);
 
             // Start new frame, call order matters.
             ImGuiImplSDL2.NewFrame();
@@ -164,17 +163,17 @@
             var io = ImGui.GetIO();
             ImGui.Render();
 
-            // If using a zoom/pan feature in node editor, apply the zoom scale to ImDrawData
-            if (ImNodes.ZoomScale != 1.0f)
-            {
-                // Does not scale nodes / links / pins/ grid
-                //var drawData = ImGui.GetDrawData();
-                //drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale); // ensure proper scaling
-                //drawData.FramebufferScale = new Vector2(ImNodes.ZoomScale, ImNodes.ZoomScale);
+            //// If using a zoom/pan feature in node editor, apply the zoom scale to ImDrawData
+            //if (ImNodes.ZoomScale != 1.0f)
+            //{
+            //    // Does not scale nodes / links / pins/ grid
+            //    //var drawData = ImGui.GetDrawData();
+            //    //drawData.ScaleClipRects(ImGui.GetIO().DisplayFramebufferScale); // ensure proper scaling
+            //    //drawData.FramebufferScale = new Vector2(ImNodes.ZoomScale, ImNodes.ZoomScale);
 
-                // So attempting to scale vertices like the original
-                ImNodes.PostRender();
-            }
+            //    // So attempting to scale vertices like the original
+            //    ImNodes.PostRender();
+            //}
 
             ImGui.EndFrame();
             OnRenderDrawData.Invoke();
@@ -193,7 +192,7 @@
         {
             if (!disposed)
             {
-                ImNodes.SetImGuiContext(null);
+                _imNodes.SetImGuiContext(null);
 
                 //ImNodes.DestroyContext(nodesContext);
 

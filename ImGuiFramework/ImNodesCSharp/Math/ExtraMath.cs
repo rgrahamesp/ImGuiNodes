@@ -65,6 +65,10 @@ namespace ImNodesCSharp.Math
 
         public static float ImMax(float a, float b) => System.Math.Max(a, b);
 
+        public static Vector2 ImMin(Vector2 lhs, Vector2 rhs) => new Vector2(lhs.X < rhs.X ? lhs.X : rhs.X, lhs.Y < rhs.Y ? lhs.Y : rhs.Y);
+        
+        public static Vector2 ImMax(Vector2 lhs, Vector2 rhs) => new Vector2(lhs.X >= rhs.X ? lhs.X : rhs.X, lhs.Y >= rhs.Y ? lhs.Y : rhs.Y);
+
         public static void ImSwap<T>(ref T a, ref T b) { T tmp = a; a = b; b = tmp; }
 
         public static Vector2 ImFloor(Vector2 v) => new Vector2((float)System.Math.Floor(v.X), (float)System.Math.Floor(v.Y));

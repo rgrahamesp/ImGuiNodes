@@ -652,12 +652,9 @@ namespace ImNodesCSharp
 
     public class ImNodesContext
     {
-        public ImNodesEditorContext DefaultEditorCtx = null;
         public ImNodesEditorContext EditorCtx = null;
 
         // Canvas draw list and helper state
-        //public ImGuiContextPtr NodeEditorImgCtx = null;
-        public ImGuiContextPtr OriginalImgCtx = null;
         public ImDrawListPtr CanvasDrawList = null;
         public ImGuiStorage NodeIdxToSubmissionIdx = new ImGuiStorage();
         public List<int> NodeIdxSubmissionOrder = new List<int>();

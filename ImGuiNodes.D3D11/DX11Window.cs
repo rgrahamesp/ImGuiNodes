@@ -22,7 +22,9 @@
         {
             d3d11Manager = new(SDLWindow, true);
 
-            imGuiManager = new();
+            imNodesDemo = new ImNodesDemo();
+
+            imGuiManager = new ImGuiManager(imNodesDemo.ImNodes);
             imGuiManager.OnRenderDrawData += OnRenderDrawData;
 
             ComPtr<ID3D11Device1> device = d3d11Manager.Device;
@@ -34,8 +36,6 @@
             ImGuiImplD3D11.SetCurrentContext(ImGui.GetCurrentContext());
             ImGuiImplD3D11.Init((Hexa.NET.ImGui.Backends.D3D11.ID3D11Device*)(void*)device.Handle, (Hexa.NET.ImGui.Backends.D3D11.ID3D11DeviceContext*)(void*)deviceContext.Handle);
             ImGuiImplD3D11.NewFrame();
-
-            imNodesDemo = new();
         }
 
         private void OnRenderDrawData()
